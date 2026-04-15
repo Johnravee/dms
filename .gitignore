@@ -31,7 +31,9 @@ yarn-error.*
 *.pem
 
 # local env files
-.env*.local
+.env
+.env.local
+.env.*.local
 
 # typescript
 *.tsbuildinfo
@@ -41,3 +43,22 @@ app-example
 # generated native folders
 /ios
 /android
+
+# Docker volumes
+.docker/
+docker-volumes/
+
+# Docker config/scripts (temporary ignore for this project)
+DOCKER_ENV_SETUP.md
+DOCKER_QUICK_START.md
+docker-compose.yml
+docker-compose.prod.yml
+docker-setup.bat
+docker-setup.sh
+
+# Firebase / Google service config (sensitive)
+firebase.json
+google-services.json
+service-account.json
+FIRESTORE_SCHEMA.md
+README_FCM.md

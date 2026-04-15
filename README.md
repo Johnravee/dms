@@ -1,50 +1,76 @@
-# Welcome to your Expo app 👋
+Firestore Structure Required:
+Create a sensors collection with a current document containing:
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+{
+"pm25": 45.2,
+"gas": 220,
+"humidity": 65,
+"temperature": 28.5,
+"timestamp": "2026-04-09T..."
+}
 
-## Get started
+Also create a devices collection with documents for each device:
 
-1. Install dependencies
+{
+"name": "Fan",
+"type": "fan",
+"status": "on",
+"isOn": true,
+"lastUpdated": "2026-04-09T..."
+}
 
-   ```bash
-   npm install
-   ```
+{
+"name": "Purifier",
+"type": "purifier",
+"status": "active",
+"isOn": true,
+"lastUpdated": "2026-04-09T..."
+}
 
-2. Start the app
+{
+"name": "Humidifier",
+"type": "humidifier",
+"status": "idle",
+"isOn": false,
+"lastUpdated": "2026-04-09T..."
+}
 
-   ```bash
-   npx expo start
-   ```
+npm install expo-print expo-sharing expo-file-system for pdf export
 
-In the output, you'll find options to open the app in a
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getDatabase } from "firebase/database";
+import { getFirestore } from "firebase/firestore";
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+// Your web app's Firebase configuration
+const firebaseConfig = {
+apiKey:
+process.env.EXPO_PUBLIC_FIREBASE_API_KEY ||
+"AIzaSyCUCPewCt_XTxHFZKCxgoNOARahWwwXeUE",
+authDomain:
+process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN ||
+"dust-monitoring-system.firebaseapp.com",
+projectId:
+process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "dust-monitoring-system",
+storageBucket:
+process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET ||
+"dust-monitoring-system.firebasestorage.app",
+messagingSenderId:
+process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "620079919441",
+appId:
+process.env.EXPO_PUBLIC_FIREBASE_APP_ID ||
+"1:620079919441:web:5c2b62b3cb99f9c849e370",
+measurementId:
+process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-0C7EPYZRJP",
+};
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const rtdb = getDatabase(
+app,
+process.env.EXPO_PUBLIC_FIREBASE_RTDB_URL ||
+"https://dust-monitoring-system-default-rtdb.asia-southeast1.firebasedatabase.app",
+);
