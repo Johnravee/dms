@@ -12,6 +12,7 @@ const allTabs = [
   { name: "devices", icon: "phone-portrait", label: "Devices" },
   { name: "controls", icon: "settings", label: "Controls" },
   { name: "history", icon: "time", label: "History" },
+  { name: "admin-requests", icon: "clipboard", label: "Requests" },
   { name: "profile", icon: "person", label: "Profile" },
 ];
 
@@ -27,23 +28,27 @@ export default function FloatingTab({
       : allTabs;
 
   return (
-    <View className="absolute bottom-6 left-4 right-4 flex-row items-end justify-center gap-4 rounded-full bg-white px-4 py-3 shadow-lg">
+    <View className="absolute bottom-5 left-3 right-3 flex-row items-end justify-between rounded-[28px] bg-white px-2 py-2 shadow-lg">
       {tabs.map((tab) => (
-        <View key={tab.name} className="items-center justify-center">
+        <View
+          key={tab.name}
+          className="flex-1 items-center justify-center px-1"
+        >
           <Pressable
             onPress={() => onTabChange(tab.name)}
-            className={`rounded-full p-3 ${
+            className={`rounded-full p-2 ${
               activeTab === tab.name ? "bg-blue-500" : "bg-gray-100"
             }`}
           >
             <Ionicons
               name={tab.icon as any}
-              size={24}
+              size={20}
               color={activeTab === tab.name ? "#ffffff" : "#6b7280"}
             />
           </Pressable>
           <Text
-            className={`mt-1 text-xs font-medium ${
+            numberOfLines={1}
+            className={`mt-1 text-[10px] font-medium ${
               activeTab === tab.name ? "text-blue-600" : "text-gray-600"
             }`}
           >

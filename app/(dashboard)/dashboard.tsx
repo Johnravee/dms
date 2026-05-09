@@ -1,11 +1,9 @@
 import UserDashboardView from "@/components/user-dashboard-view";
 import { useAuth } from "@/contexts/auth-context";
 import { useSensorData } from "@/hooks/useSensorData";
-import { useSensorHistory } from "@/hooks/useSensorHistory";
 // import { seedDatabase } from "@/scripts/seed-database";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useEffect, useRef } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -17,35 +15,9 @@ import {
 export default function DashboardScreen() {
   const { sensorData, loading } = useSensorData();
   const { logout } = useAuth();
-  const { logSensorData } = useSensorHistory();
-  const intervalRef = useRef<NodeJS.Timeout | number | null>(null);
-
-  // Set up automatic logging every 30 minutes
-  useEffect(() => {
-    // Log immediately on mount
-    logSensorData(sensorData);
-
-    // Set up interval for every 30 minutes (1800000 ms)
-    intervalRef.current = setInterval(
-      () => {
-        logSensorData(sensorData);
-        console.log("Sensor data logged at", new Date().toISOString());
-      },
-      30 * 60 * 1000,
-    ); // 30 minutes
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [sensorData, logSensorData]);
 
   const handleLogout = async () => {
     try {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
       await logout();
       router.replace("/login");
     } catch (err) {

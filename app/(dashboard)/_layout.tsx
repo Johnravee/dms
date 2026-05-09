@@ -1,4 +1,5 @@
 import FloatingTab from "@/components/floating-tab";
+import AdminRequestsScreen from "@/components/admin-requests-screen";
 import { useAuth } from "@/contexts/auth-context";
 import { useState } from "react";
 import { View } from "react-native";
@@ -23,6 +24,12 @@ export default function DashboardLayout() {
       case "history":
         // Only admins can access history
         return userRole === "admin" ? <HistoryScreen /> : <DashboardScreen />;
+      case "admin-requests":
+        return userRole === "admin" ? (
+          <AdminRequestsScreen />
+        ) : (
+          <DashboardScreen />
+        );
       case "profile":
         return <ProfileScreen />;
       case "devices":

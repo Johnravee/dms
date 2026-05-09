@@ -1,7 +1,12 @@
 // Import the functions you need from the SDKs you need
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getApps, initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getDatabase } from "firebase/database";
+import {
+  getAuth,
+  getReactNativePersistence,
+  initializeAuth,
+} from "firebase/auth";
+import * as database from "firebase/database";
 import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
@@ -17,12 +22,16 @@ const firebaseConfig = {
 
 // Initialize Firebase only if it hasn't been initialized already
 // This prevents "Firebase App already exists" error during hot reload
-const app =
-  getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const isNewApp = getApps().length === 0;
+const app = isNewApp ? initializeApp(firebaseConfig) : getApps()[0];
 
-export const auth = getAuth(app);
+export const auth = isNewApp
+  ? initializeAuth(app, {
+      persistence: getReactNativePersistence(AsyncStorage),
+    })
+  : getAuth(app);
 export const db = getFirestore(app);
-export const rtdb = getDatabase(
+export const rtdb = (database as any).getDatabase(
   app,
   process.env.EXPO_PUBLIC_FIREBASE_RTDB_URL || "",
 );

@@ -1,4 +1,5 @@
 import { rtdb } from "@/config/firebase";
+import { useAuth } from "@/contexts/auth-context";
 import { onValue, ref } from "firebase/database";
 import { useEffect, useState } from "react";
 
@@ -16,6 +17,9 @@ export interface Device {
   type: string;
   status: string;
   isOn: boolean;
+  isAuto?: boolean;
+  mode?: string;
+  state?: boolean;
   lastUpdated: string;
 }
 
@@ -28,6 +32,7 @@ const DEFAULT_DATA: SensorData = {
 };
 
 export const useSensorData = () => {
+  const { user } = useAuth();
   const [sensorData, setSensorData] = useState<SensorData>(DEFAULT_DATA);
   const [devices, setDevices] = useState<Device[]>([]);
   const [fanStatus, setFanStatus] = useState<boolean>(false);
@@ -35,18 +40,22 @@ export const useSensorData = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Only set up listeners when user is authenticated
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
-    const unsubscribers: (() => void)[] = [];
 
     try {
-      // Listen to real-time updates from sensors/current
+      // Listen to real-time updates from sensors/current (modular API)
       const sensorRef = ref(rtdb, "sensors/current");
-
       const sensorUnsubscribe = onValue(
         sensorRef,
         (snapshot) => {
-          if (snapshot.exists()) {
-            const data = snapshot.val();
+          const data = snapshot.val();
+          if (data) {
             setSensorData({
               pm25: data.pm25 || 0,
               gas: data.gas || 0,
@@ -60,25 +69,21 @@ export const useSensorData = () => {
           }
           setLoading(false);
         },
-        (error) => {
+        (error: any) => {
           console.error("Error fetching sensor data:", error);
           setError(error.message);
           setLoading(false);
         },
       );
-      unsubscribers.push(sensorUnsubscribe);
 
       // Listen to real-time updates from devices
       const devicesRef = ref(rtdb, "devices");
-
       const devicesUnsubscribe = onValue(
         devicesRef,
         (snapshot) => {
-          if (snapshot.exists()) {
-            const data = snapshot.val();
+          const data = snapshot.val();
+          if (data) {
             const devicesList: Device[] = [];
-
-            // Convert object to array
             Object.entries(data).forEach(([id, deviceData]: [string, any]) => {
               devicesList.push({
                 id,
@@ -86,12 +91,14 @@ export const useSensorData = () => {
                 type: deviceData.type || "",
                 status: deviceData.status || "unknown",
                 isOn: deviceData.isOn || false,
+                isAuto: deviceData.isAuto || false,
+                mode: deviceData.mode || "manual",
+                state: deviceData.state || false,
                 lastUpdated: deviceData.lastUpdated || new Date().toISOString(),
               });
 
-              // Monitor fan status specifically
-              if (deviceData.type === "fan") {
-                setFanStatus(deviceData.isOn || false);
+              if ((deviceData as any).type === "fan") {
+                setFanStatus((deviceData as any).isOn || false);
               }
             });
 
@@ -100,20 +107,22 @@ export const useSensorData = () => {
             setDevices([]);
           }
         },
-        (error) => {
+        (error: any) => {
           console.error("Error fetching devices:", error);
           setError(error.message);
         },
       );
-      unsubscribers.push(devicesUnsubscribe);
 
-      return () => unsubscribers.forEach((unsub) => unsub());
+      return () => {
+        sensorUnsubscribe();
+        devicesUnsubscribe();
+      };
     } catch (err) {
       console.error("Error fetching data:", err);
       setError(err instanceof Error ? err.message : "Unknown error");
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   return {
     sensorData,

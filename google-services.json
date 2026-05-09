@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "620079919441",
+    "firebase_url": "https://dust-monitoring-system-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "dust-monitoring-system",
+    "storage_bucket": "dust-monitoring-system.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:620079919441:android:63458928b395d93649e370",
+        "android_client_info": {
+          "package_name": "com.company.dms"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBDQPrvv97zdtFJcByQmLYQMAD9jYNguYM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

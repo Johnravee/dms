@@ -256,6 +256,29 @@ export const enableNotifications = async (): Promise<boolean> => {
 };
 
 /**
+ * Send a local alert notification with optional payload data
+ */
+export const sendLocalAlertNotification = async (
+  title: string,
+  message: string,
+  data: Record<string, any> = {},
+): Promise<void> => {
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title,
+        body: message,
+        data,
+        sound: true,
+      },
+      trigger: null,
+    });
+  } catch (error) {
+    console.error("Error sending local alert notification:", error);
+  }
+};
+
+/**
  * Send a test notification (local only for testing)
  */
 export const sendTestNotification = async (): Promise<void> => {

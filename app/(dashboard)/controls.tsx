@@ -2,7 +2,7 @@ import { rtdb } from "@/config/firebase";
 import { useSensorData } from "@/hooks/useSensorData";
 import { Ionicons } from "@expo/vector-icons";
 import { ref, update } from "firebase/database";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -13,11 +13,14 @@ import {
 } from "react-native";
 
 export default function ControlsScreen() {
-  const { devices, fanStatus, loading } = useSensorData();
+  const { sensorData, devices, fanStatus, loading } = useSensorData();
   const [updating, setUpdating] = useState<string | null>(null);
+  const [autoMode, setAutoMode] = useState<boolean>(false);
+
+  const fanDevice = devices.find((device) => device.id === "fan1");
 
   // Toggle fan on/off
-  const handleFanToggle = async (newStatus: boolean) => {
+  const handleFanToggle = useCallback(async (newStatus: boolean) => {
     try {
       setUpdating("fan");
       await update(ref(rtdb, "devices/fan1"), {
@@ -30,7 +33,51 @@ export default function ControlsScreen() {
     } finally {
       setUpdating(null);
     }
+  }, []);
+
+  const handleAutoModeToggle = async (enabled: boolean) => {
+    try {
+      setUpdating("auto-mode");
+      await update(ref(rtdb, "devices/fan1"), {
+        isAuto: enabled,
+        mode: enabled ? "auto" : "manual",
+        lastUpdated: new Date().toISOString(),
+      });
+      setAutoMode(enabled);
+    } catch (err) {
+      console.error("Error updating auto mode:", err);
+      alert("Failed to update auto mode");
+    } finally {
+      setUpdating(null);
+    }
   };
+
+  useEffect(() => {
+    if (fanDevice?.isAuto !== undefined) {
+      setAutoMode(Boolean(fanDevice.isAuto));
+    } else if (fanDevice?.mode) {
+      setAutoMode(fanDevice.mode === "auto");
+    }
+  }, [fanDevice?.isAuto, fanDevice?.mode]);
+
+  useEffect(() => {
+    if (!autoMode) {
+      return;
+    }
+
+    const pm25 = Number(sensorData?.pm25) || 0;
+    const gas = Number(sensorData?.gas) || 0;
+    const isHazardous = pm25 >= 36 || gas >= 1001;
+    const isSafe = pm25 <= 12 && gas <= 750;
+
+    if (isHazardous && !fanStatus) {
+      void handleFanToggle(true);
+    }
+
+    if (isSafe && fanStatus) {
+      void handleFanToggle(false);
+    }
+  }, [autoMode, fanStatus, sensorData, handleFanToggle]);
 
   // Toggle any device on/off
   const handleDeviceToggle = async (deviceId: string, newStatus: boolean) => {
@@ -145,16 +192,31 @@ export default function ControlsScreen() {
               </View>
             </View>
             <View className="flex-row items-center gap-3">
-              <Text className="text-sm font-medium text-gray-600">
-                {fanStatus ? "ON" : "OFF"}
-              </Text>
+              <View className="items-end">
+                <Text className="text-sm font-medium text-gray-600">
+                  {fanStatus ? "ON" : "OFF"}
+                </Text>
+                <Text className="text-xs text-gray-500">
+                  Mode: {autoMode ? "Auto" : "Manual"}
+                </Text>
+              </View>
               <Switch
                 value={fanStatus}
                 onValueChange={handleFanToggle}
-                disabled={updating === "fan"}
+                disabled={updating === "fan" || autoMode}
                 trackColor={{ false: "#ccc", true: "#3b82f6" }}
               />
             </View>
+          </View>
+          {/* Auto / Manual Toggle */}
+          <View className="mt-2 flex-row items-center justify-between">
+            <Text className="text-sm text-gray-600">Automatic Mode</Text>
+            <Switch
+              value={autoMode}
+              onValueChange={handleAutoModeToggle}
+              disabled={updating === "auto-mode"}
+              trackColor={{ false: "#ccc", true: "#3b82f6" }}
+            />
           </View>
         </View>
 

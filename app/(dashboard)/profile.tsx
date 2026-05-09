@@ -1,3 +1,4 @@
+import { db } from "@/config/firebase";
 import { useAuth } from "@/contexts/auth-context";
 import {
   disableNotifications,
@@ -6,16 +7,17 @@ import {
 } from "@/utils/notifications";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
+  Modal,
   Pressable,
   ScrollView,
   Text,
-  View,
-  Modal,
   TextInput,
-  ActivityIndicator,
+  View,
 } from "react-native";
 
 interface ProfileSection {
@@ -35,8 +37,11 @@ interface ProfileItem {
 export default function ProfileScreen() {
   const { user, logout, changePassword } = useAuth();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const [showChangePasswordModal, setShowChangePasswordModal] =
-    useState(false);
+  const [adminRequestStatus, setAdminRequestStatus] = useState<
+    "idle" | "pending" | "approved" | "rejected"
+  >("idle");
+  const [requestingAdminAccess, setRequestingAdminAccess] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -53,6 +58,29 @@ export default function ProfileScreen() {
     };
     checkNotificationStatus();
   }, []);
+
+  useEffect(() => {
+    const loadAdminRequestStatus = async () => {
+      if (!user?.id || user.role === "admin") {
+        setAdminRequestStatus("approved");
+        return;
+      }
+
+      try {
+        const requestDoc = await getDoc(doc(db, "admin_requests", user.id));
+        if (requestDoc.exists()) {
+          const data = requestDoc.data();
+          setAdminRequestStatus(data.status || "pending");
+        } else {
+          setAdminRequestStatus("idle");
+        }
+      } catch (error) {
+        console.error("Error loading admin request status:", error);
+      }
+    };
+
+    void loadAdminRequestStatus();
+  }, [user?.id, user?.role]);
 
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
@@ -156,6 +184,46 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleRequestAdminAccess = () => {
+    if (!user?.id || !user?.email) {
+      Alert.alert("Error", "You must be logged in to request admin access.");
+      return;
+    }
+
+    Alert.alert("Request Admin Access", "Send a request to become an admin?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Request",
+        onPress: async () => {
+          try {
+            setRequestingAdminAccess(true);
+            await setDoc(doc(db, "admin_requests", user.id), {
+              uid: user.id,
+              email: user.email,
+              status: "pending",
+              requestedAt: serverTimestamp(),
+              reviewedAt: null,
+              reviewedBy: null,
+            });
+            setAdminRequestStatus("pending");
+            Alert.alert(
+              "Request Sent",
+              "Your admin request has been submitted.",
+            );
+          } catch (error) {
+            console.error("Error requesting admin access:", error);
+            Alert.alert(
+              "Error",
+              "Failed to submit admin request. Please try again.",
+            );
+          } finally {
+            setRequestingAdminAccess(false);
+          }
+        },
+      },
+    ]);
+  };
+
   const accountItems: ProfileItem[] = [
     { icon: "mail", label: "Email", value: user?.email },
     {
@@ -183,6 +251,37 @@ export default function ProfileScreen() {
     },
   ];
 
+  const requestItems: ProfileItem[] =
+    user?.role === "admin"
+      ? []
+      : [
+          {
+            icon: "shield-checkmark",
+            label: "Admin Access",
+            value:
+              adminRequestStatus === "pending"
+                ? "Pending approval"
+                : adminRequestStatus === "approved"
+                  ? "Approved"
+                  : adminRequestStatus === "rejected"
+                    ? "Rejected"
+                    : "Tap to request",
+            onPress:
+              adminRequestStatus === "pending" || requestingAdminAccess
+                ? undefined
+                : handleRequestAdminAccess,
+            color:
+              adminRequestStatus === "pending"
+                ? "bg-yellow-100"
+                : adminRequestStatus === "approved"
+                  ? "bg-green-100"
+                  : adminRequestStatus === "rejected"
+                    ? "bg-red-100"
+                    : "bg-blue-100",
+            showArrow: adminRequestStatus === "idle",
+          },
+        ];
+
   const sections: ProfileSection[] = [
     {
       title: "Account Information",
@@ -192,6 +291,14 @@ export default function ProfileScreen() {
       title: "Settings",
       items: settingsItems,
     },
+    ...(requestItems.length
+      ? [
+          {
+            title: "Admin Access",
+            items: requestItems,
+          },
+        ]
+      : []),
   ];
 
   return (

@@ -1,14 +1,11 @@
 import { db } from "@/config/firebase";
 import { useSensorHistory } from "@/hooks/useSensorHistory";
-import { exportSensorHistoryPDF } from "@/utils/pdfGenerator";
 import { Ionicons } from "@expo/vector-icons";
 import {
   collection,
   deleteDoc,
   doc,
   getDocs,
-  query,
-  where,
 } from "firebase/firestore";
 import { useState } from "react";
 import {
@@ -23,17 +20,16 @@ import {
 export default function HistoryScreen() {
   const { history, loading } = useSensorHistory();
   const [deleting, setDeleting] = useState(false);
-  const [exporting, setExporting] = useState(false);
 
   const formatDate = (timestamp: string) => {
     return new Date(timestamp).toLocaleString();
   };
 
-  // Delete data older than 7 days
-  const handleDeleteOldData = async () => {
+  // Delete all history data
+  const handleDeleteAllData = async () => {
     Alert.alert(
-      "Delete Old Data",
-      "This will delete sensor history older than 7 days. Continue?",
+      "Delete All Data",
+      "This will delete all sensor history. Continue?",
       [
         {
           text: "Cancel",
@@ -45,15 +41,7 @@ export default function HistoryScreen() {
           onPress: async () => {
             try {
               setDeleting(true);
-              const sevenDaysAgo = new Date(
-                Date.now() - 7 * 24 * 60 * 60 * 1000,
-              ).toISOString();
-
-              const q = query(
-                collection(db, "sensorHistory"),
-                where("timestamp", "<", sevenDaysAgo),
-              );
-              const snapshot = await getDocs(q);
+              const snapshot = await getDocs(collection(db, "sensorHistory"));
 
               let deletedCount = 0;
               for (const docSnap of snapshot.docs) {
@@ -61,7 +49,7 @@ export default function HistoryScreen() {
                 deletedCount++;
               }
 
-              Alert.alert("Success", `Deleted ${deletedCount} old records`);
+              Alert.alert("Success", `Deleted ${deletedCount} records`);
             } catch (err) {
               Alert.alert(
                 "Error",
@@ -75,43 +63,6 @@ export default function HistoryScreen() {
         },
       ],
     );
-  };
-
-  // Export data as PDF
-  const handleExportPDF = async () => {
-    try {
-      setExporting(true);
-
-      if (history.length === 0) {
-        Alert.alert("No Data", "No history data to export");
-        return;
-      }
-
-      // Convert history data to PDF format
-      const pdfData = history.map((log) => ({
-        id: log.id,
-        pm25: Number(log.pm25) || 0,
-        gas: Number(log.gas) || 0,
-        humidity: Number(log.humidity) || 0,
-        temperature: Number(log.temperature) || 0,
-        timestamp: String(log.timestamp),
-      }));
-
-      console.log("📊 Exporting PDF with", pdfData.length, "records");
-      const result = await exportSensorHistoryPDF(pdfData);
-      Alert.alert("✅ Success", result, [{ text: "OK", style: "default" }]);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Unknown error occurred";
-
-      Alert.alert("Export Error", errorMessage, [
-        { text: "OK", style: "default" },
-      ]);
-
-      console.error("PDF export error:", err);
-    } finally {
-      setExporting(false);
-    }
   };
 
   if (loading) {
@@ -136,36 +87,14 @@ export default function HistoryScreen() {
         <View className="mb-8">
           <Text className="text-3xl font-bold text-gray-900">History</Text>
           <Text className="mt-1 text-sm text-gray-500">
-            Sensor data logged every 30 minutes
+            Sensor data logged every minute
           </Text>
         </View>
 
         {/* Action Buttons */}
         <View className="mb-6 flex-row gap-2">
           <Pressable
-            onPress={handleExportPDF}
-            disabled={exporting || history.length === 0}
-            className="flex-1 rounded-lg bg-green-50 p-3 active:bg-green-100"
-          >
-            {exporting ? (
-              <ActivityIndicator size="small" color="#16a34a" />
-            ) : (
-              <>
-                <Ionicons
-                  name="download"
-                  size={20}
-                  color="#16a34a"
-                  style={{ marginBottom: 4 }}
-                />
-                <Text className="text-center text-xs font-medium text-green-700">
-                  Export PDF
-                </Text>
-              </>
-            )}
-          </Pressable>
-
-          <Pressable
-            onPress={handleDeleteOldData}
+            onPress={handleDeleteAllData}
             disabled={deleting || history.length === 0}
             className="flex-1 rounded-lg bg-red-50 p-3 active:bg-red-100"
           >
@@ -180,7 +109,7 @@ export default function HistoryScreen() {
                   style={{ marginBottom: 4 }}
                 />
                 <Text className="text-center text-xs font-medium text-red-700">
-                  Delete Old
+                  Delete All
                 </Text>
               </>
             )}

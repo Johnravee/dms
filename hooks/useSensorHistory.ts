@@ -1,4 +1,5 @@
 import { db } from "@/config/firebase";
+import { useAuth } from "@/contexts/auth-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   addDoc,
@@ -7,7 +8,7 @@ import {
   orderBy,
   query,
 } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export interface SensorHistoryLog {
   id: string;
@@ -20,13 +21,19 @@ export interface SensorHistoryLog {
 
 const CACHE_KEY = "sensorHistoryCache";
 const CACHE_EXPIRY_KEY = "sensorHistoryCacheExpiry";
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export const useSensorHistory = () => {
+  const { user } = useAuth();
   const [history, setHistory] = useState<SensorHistoryLog[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Only set up listeners when user is authenticated
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     // Load cached data first
     const loadCachedData = async () => {
       try {
@@ -89,29 +96,32 @@ export const useSensorHistory = () => {
     );
 
     return unsubscribe;
-  }, []);
+  }, [user]);
 
   // Function to log current sensor data
-  const logSensorData = async (sensorData: {
-    pm25: number;
-    gas: number;
-    humidity: number;
-    temperature: number;
-  }) => {
-    try {
-      const historyRef = collection(db, "sensorHistory");
-      await addDoc(historyRef, {
-        pm25: sensorData.pm25,
-        gas: sensorData.gas,
-        humidity: sensorData.humidity,
-        temperature: sensorData.temperature,
-        timestamp: new Date().toISOString(),
-      });
-      console.log("Sensor data logged to Firestore successfully");
-    } catch (err) {
-      console.error("Error logging sensor data:", err);
-    }
-  };
+  const logSensorData = useCallback(
+    async (sensorData: {
+      pm25: number;
+      gas: number;
+      humidity: number;
+      temperature: number;
+    }) => {
+      try {
+        const historyRef = collection(db, "sensorHistory");
+        await addDoc(historyRef, {
+          pm25: sensorData.pm25,
+          gas: sensorData.gas,
+          humidity: sensorData.humidity,
+          temperature: sensorData.temperature,
+          timestamp: new Date().toISOString(),
+        });
+        console.log("Sensor data logged to Firestore successfully");
+      } catch (err) {
+        console.error("Error logging sensor data:", err);
+      }
+    },
+    [],
+  );
 
   return {
     history,

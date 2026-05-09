@@ -17,27 +17,52 @@ export default function UserDashboardView({
   const getSensorStatus = (value: number, type: string) => {
     switch (type) {
       case "pm25":
-        if (value >= 0 && value <= 35)
+        if (value >= 0 && value <= 12)
           return {
             status: "Safe",
-            color: "bg-green-100",
-            textColor: "text-green-600",
+            color: "bg-blue-100",
+            textColor: "text-blue-600",
             percentage: value,
           };
-        if (value > 35 && value <= 75)
+        if (value >= 13 && value <= 35)
           return {
             status: "Moderate",
             color: "bg-yellow-100",
             textColor: "text-yellow-600",
             percentage: value,
           };
-        if (value > 75)
+        if (value >= 36)
           return {
             status: "Hazardous",
             color: "bg-red-100",
             textColor: "text-red-600",
             percentage: value,
           };
+
+      case "gas":
+        // Gas thresholds (ppm) per provided ranges
+        if (value >= 501 && value <= 750)
+          return {
+            status: "Safe",
+            color: "bg-blue-100",
+            textColor: "text-blue-600",
+            percentage: value,
+          };
+        if (value >= 751 && value <= 1000)
+          return {
+            status: "Moderate",
+            color: "bg-yellow-100",
+            textColor: "text-yellow-600",
+            percentage: value,
+          };
+        if (value >= 1001)
+          return {
+            status: "Hazardous",
+            color: "bg-red-100",
+            textColor: "text-red-600",
+            percentage: value,
+          };
+
       default:
         return {
           status: "Normal",
@@ -49,17 +74,10 @@ export default function UserDashboardView({
   };
 
   const pm25Status = getSensorStatus(pm25, "pm25");
+  const gasStatus = getSensorStatus(gas, "gas");
 
   return (
     <View className="gap-6">
-      {/* Last Updated */}
-      <View className="rounded-lg bg-white p-4">
-        <Text className="text-xs text-gray-500">Last Updated</Text>
-        <Text className="mt-1 text-sm font-semibold text-gray-900">
-          {formatTime(timestamp)}
-        </Text>
-      </View>
-
       {/* Dust Sensor - Primary */}
       <View className={`rounded-lg ${pm25Status.color} p-6`}>
         <View className="flex-row items-center justify-between mb-4">
@@ -84,9 +102,9 @@ export default function UserDashboardView({
         <View className="bg-white rounded-full h-2 overflow-hidden">
           <View
             className={`h-full ${
-              pm25Status.percentage <= 30
-                ? "bg-green-600"
-                : pm25Status.percentage <= 60
+              pm25Status.status === "Safe"
+                ? "bg-blue-600"
+                : pm25Status.status === "Moderate"
                   ? "bg-yellow-600"
                   : "bg-red-600"
             }`}
@@ -98,11 +116,38 @@ export default function UserDashboardView({
       {/* Other Sensors Grid */}
       <View className="gap-4">
         {/* Gas */}
-        <View className="rounded-lg bg-white p-4">
-          <Text className="text-sm font-semibold text-gray-600">Gas Level</Text>
-          <View className="mt-2 flex-row items-center justify-between">
-            <Text className="text-2xl font-bold text-gray-900">{gas}</Text>
-            <Text className="text-xs text-gray-500">ppm</Text>
+        <View className={`rounded-lg ${gasStatus.color} p-4`}>
+          <Text className="text-sm text-gray-600">Gas Level</Text>
+          <View className="flex-row items-center justify-between mb-4">
+            <View>
+              <Text
+                className={`mt-2 text-3xl font-bold ${gasStatus.textColor}`}
+              >
+                {gas.toFixed(1)}
+              </Text>
+              <Text className="mt-1 text-xs text-gray-600">ppm</Text>
+            </View>
+            <View className="items-end">
+              <Text className={`text-sm font-semibold ${gasStatus.textColor}`}>
+                {gasStatus.status}
+              </Text>
+              <Text className={`mt-2 text-xl font-bold ${gasStatus.textColor}`}>
+                {gasStatus.percentage.toFixed(0)}%
+              </Text>
+            </View>
+          </View>
+
+          <View className="bg-white rounded-full h-2 overflow-hidden">
+            <View
+              className={`h-full ${
+                gasStatus.status === "Safe"
+                  ? "bg-blue-600"
+                  : gasStatus.status === "Moderate"
+                    ? "bg-yellow-600"
+                    : "bg-red-600"
+              }`}
+              style={{ width: `${Math.min(gasStatus.percentage, 200)}%` }}
+            />
           </View>
         </View>
 

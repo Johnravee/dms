@@ -58,7 +58,6 @@ docker-setup.sh
 
 # Firebase / Google service config (sensitive)
 firebase.json
-google-services.json
 service-account.json
 FIRESTORE_SCHEMA.md
 README_FCM.md

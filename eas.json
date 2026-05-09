@@ -6,14 +6,42 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "development",
+        "EXPO_PUBLIC_API_URL": "http://localhost:8081"
+      }
     },
     "preview": {
       "distribution": "internal",
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "GOOGLE_SERVICES_JSON": "@file:GOOGLE_SERVICES_JSON",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCUCPewCt_XTxHFZKCxgoNOARahWwwXeUE",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "dust-monitoring-system.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "dust-monitoring-system",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "dust-monitoring-system.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "620079919441",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:620079919441:web:5c2b62b3cb99f9c849e370",
+        "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-0C7EPYZRJP",
+        "EXPO_PUBLIC_FIREBASE_RTDB_URL": "https://dust-monitoring-system-default-rtdb.asia-southeast1.firebasedatabase.app",
+        "EXPO_PUBLIC_APP_ENV": "preview"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "GOOGLE_SERVICES_JSON": "@file:GOOGLE_SERVICES_JSON",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCUCPewCt_XTxHFZKCxgoNOARahWwwXeUE",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "dust-monitoring-system.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "dust-monitoring-system",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "dust-monitoring-system.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "620079919441",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:620079919441:web:5c2b62b3cb99f9c849e370",
+        "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-0C7EPYZRJP",
+        "EXPO_PUBLIC_FIREBASE_RTDB_URL": "https://dust-monitoring-system-default-rtdb.asia-southeast1.firebasedatabase.app",
+        "EXPO_PUBLIC_APP_ENV": "production"
+      }
     }
   },
   "submit": {
