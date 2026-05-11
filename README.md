@@ -36,21 +36,41 @@ Also create a devices collection with documents for each device:
 }
 
 npm install expo-print expo-sharing expo-file-system for pdf export
-Setup
 
--
-- Create a `.env` file from `.env.example` and fill in your Firebase values. Do NOT commit `.env`.
-- If your native builds require `google-services.json` (Android) or `GoogleService-Info.plist` (iOS), place them locally during your build step. Example templates are provided in `google-services.json.example`.
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getDatabase } from "firebase/database";
+import { getFirestore } from "firebase/firestore";
 
-The app reads Firebase config from the following environment variables (see `.env.example`):
+// Your web app's Firebase configuration
+const firebaseConfig = {
+apiKey:
+process.env.EXPO_PUBLIC_FIREBASE_API_KEY ||
+"AIzaSyCUCPewCt_XTxHFZKCxgoNOARahWwwXeUE",
+authDomain:
+process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN ||
+"dust-monitoring-system.firebaseapp.com",
+projectId:
+process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "dust-monitoring-system",
+storageBucket:
+process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET ||
+"dust-monitoring-system.firebasestorage.app",
+messagingSenderId:
+process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "620079919441",
+appId:
+process.env.EXPO_PUBLIC_FIREBASE_APP_ID ||
+"1:620079919441:web:5c2b62b3cb99f9c849e370",
+measurementId:
+process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-0C7EPYZRJP",
+};
 
-- `EXPO_PUBLIC_FIREBASE_API_KEY`
-- `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN`
-- `EXPO_PUBLIC_FIREBASE_PROJECT_ID`
-- `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET`
-- `EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
-- `EXPO_PUBLIC_FIREBASE_APP_ID`
-- `EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID`
-- `EXPO_PUBLIC_FIREBASE_RTDB_URL`
-
-Do not commit secret or service account files to the repository. Use CI/CD secret storage or local files excluded by `.gitignore`.
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const rtdb = getDatabase(
+app,
+process.env.EXPO_PUBLIC_FIREBASE_RTDB_URL ||
+"https://dust-monitoring-system-default-rtdb.asia-southeast1.firebasedatabase.app",
+);
