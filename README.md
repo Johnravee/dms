@@ -5,7 +5,7 @@ This repository contains the DMS Expo app (React Native + Expo Router) used to m
 **Contents of this README**
 
 - Project structure
-- Firestore required documents
+- Firestore / Realtime Database required data
 - Firebase setup (console + env vars)
 - Local and CI notes for native config files
 - How to run the app (web / Android / iOS)
@@ -29,11 +29,23 @@ Top-level layout (important files and folders):
 - `.env.example` — environment variable template
 - `package.json` — scripts and dependencies
 
-## Firestore structure required
+## Firebase data structure required
 
-Create the following collections/documents in Firestore used by the app:
+The app uses Firestore for user/auth/admin data and sensor history, and Realtime Database for live sensor and device state.
 
-- `sensors/current` document (example):
+### Firestore collections
+
+- `users/{uid}`
+
+```
+{
+	"email": "user@example.com",
+	"role": "user",
+	"createdAt": "2026-04-09T..."
+}
+```
+
+- `sensorHistory/{documentId}`
 
 ```
 {
@@ -45,7 +57,34 @@ Create the following collections/documents in Firestore used by the app:
 }
 ```
 
-- `devices` collection: each device is a document with fields like:
+- `admin_requests/{uid}`
+
+```
+{
+	"uid": "abc123",
+	"email": "user@example.com",
+	"status": "pending",
+	"requestedAt": "2026-04-09T...",
+	"reviewedAt": null,
+	"reviewedBy": null
+}
+```
+
+### Realtime Database paths
+
+- `sensors/current`
+
+```
+{
+	"pm25": 45.2,
+	"gas": 220,
+	"humidity": 65,
+	"temperature": 28.5,
+	"timestamp": "2026-04-09T..."
+}
+```
+
+- `devices/{deviceId}` where `deviceId` can be `fan1`, `purifier1`, `humidifier1`, etc.
 
 ```
 {
@@ -53,11 +92,11 @@ Create the following collections/documents in Firestore used by the app:
 	"type": "fan",
 	"status": "on",
 	"isOn": true,
+	"isAuto": false,
+	"mode": "manual",
 	"lastUpdated": "2026-04-09T..."
 }
 ```
-
-Repeat for other devices (Purifier, Humidifier, etc.).
 
 ## Firebase setup (web / Expo)
 
